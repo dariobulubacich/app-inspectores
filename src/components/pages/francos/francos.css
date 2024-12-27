@@ -1,0 +1,61 @@
+.form {
+  padding: 35px;
+}
+.form-containers {
+  display: flex;
+  list-style: none;
+  flex-direction: column; /* Los elementos se colocan en columna */
+  justify-content: center; /* Centrar verticalmente */
+  gap: 10px; /* Espaciado entre los campos */
+  max-width: 600px; /* Ancho máximo del formulario */
+  margin: 0 auto; /* Centrar el contenedor en la página */
+  padding: 70px;
+  background-color: #addee4; /* Fondo claro */
+  border: 1px solid #ddd; /* Borde sutil */
+  border-radius: 10px; /* Bordes redondeados */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para profundidad */
+}
+
+.div-dni {
+  display: flex;
+  margin: 0 auto;
+  gap: 35px;
+}
+
+.inputs-dni {
+  padding: 15px;
+  max-width: 120px;
+  text-align: center;
+  font-size: 20px;
+}
+
+.div-carnet {
+  display: flex;
+}
+.inputs-carnet {
+  padding: 15px;
+  max-width: 120px;
+  text-align: center;
+  font-size: 25px;
+}
+
+.check-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 20px 30px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.inputs {
+  font-size: 20px;
+}
+
+.div-agre-client {
+  display: flex;
+  margin: 0 auto;
+  gap: 35px;
+}

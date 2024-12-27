@@ -1,0 +1,40 @@
+.form-containers {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.inputs {
+  padding: 10px;
+  font-size: 16px;
+  width: 300px;
+}
+
+.buscar-button,
+.modificar-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.buscar-button:hover,
+.modificar-button:hover {
+  background-color: #0056b3;
+}
+
+.jugador-info {
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.select-condicion {
+  padding: 10px;
+  font-size: 16px;
+  margin-right: 10px;
+}
