@@ -35,7 +35,7 @@ const Login = () => {
         if (role === "admin") {
           navigate("/admin-dashboard");
         } else {
-          navigate("/cargajugadores");
+          navigate("/informes");
         }
       } else {
         throw new Error("El usuario no tiene datos asociados en Firestore");
