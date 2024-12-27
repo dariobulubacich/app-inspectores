@@ -8,7 +8,7 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import { db } from "../../../firebase";
+import { db } from "../../../firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "./francos.css";

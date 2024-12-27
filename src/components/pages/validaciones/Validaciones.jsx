@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { db } from "../../../firebase";
+import { db } from "../../../firebaseConfig";
 import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // Importar autenticación
 import Swal from "sweetalert2";

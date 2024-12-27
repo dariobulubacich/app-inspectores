@@ -7,7 +7,7 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { db } from "../../../firebase";
+import { db } from "../../../firebaseConfig";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
