@@ -5,7 +5,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   return (
     <div>
-      <h1>Bienvenido al panel de administrador</h1>
+      <h1>Panel de administrador</h1>
       <div>
         <nav>
           <ul className="ul-nav">
