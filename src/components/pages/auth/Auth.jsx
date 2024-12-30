@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { auth, db } from "../../firebaseConfig"; // Importa tu configuración de Firebase
+import { auth, db } from "../../../firebaseConfig"; // Importa tu configuración de Firebase
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -63,7 +63,7 @@ const Login = () => {
           if (role === "admin") {
             navigate("/admin-dashboard"); // Redirigir al navbar de admin
           } else {
-            navigate("/validaciones"); // Redirigir al dashboard de usuario
+            navigate("/Validaciones"); // Redirigir al dashboard de usuario
           }
         } else {
           throw new Error("El usuario no tiene datos asociados en Firestore");
