@@ -22,7 +22,7 @@ const AdminDashboard = () => {
             </li>
 
             <li>
-              <button onClick={() => navigate("/Listados")}>Listados</button>
+              <button onClick={() => navigate("/Sabanas")}>Sabanas</button>
             </li>
           </ul>
         </nav>
