@@ -7,13 +7,14 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import { Typography } from "@mui/material";
 import "./auth.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Estado para alternar visibilidad
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -38,13 +39,12 @@ const Login = () => {
           role: "user", // Rol predeterminado
         });
 
-        //alert("Usuario registrado correctamente");
         Swal.fire(
           "Registro exitoso",
           "Usuario registrado exitosamente",
           "success"
         );
-        navigate("/validaciones"); // Redirigir al panel del usuario registrado
+        navigate("/validaciones"); // Redirigir al usuario registrado
       } else {
         // Inicio de sesión
         const userCredential = await signInWithEmailAndPassword(
@@ -58,13 +58,7 @@ const Login = () => {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const role = userDoc.data().role;
-
-          // Redirigir según el rol
-          if (role === "admin") {
-            navigate("/admin-dashboard"); // Redirigir al navbar de admin
-          } else {
-            navigate("/Validaciones"); // Redirigir al dashboard de usuario
-          }
+          navigate(role === "admin" ? "/admin-dashboard" : "/Validaciones");
         } else {
           throw new Error("El usuario no tiene datos asociados en Firestore");
         }
@@ -75,13 +69,12 @@ const Login = () => {
         title: "Error al iniciar sesión",
         text: error.message,
       });
-      //setError("Error: " + error.message);
     }
   };
 
   return (
-    <Grid container={true}>
-      <Grid style={{ padding: "12rem" }} size={{ xs: 12 }}>
+    <Grid container>
+      <Grid style={{ padding: "12rem" }} xs={12}>
         <div className="auth-container">
           <Typography
             variant="h1"
@@ -96,6 +89,7 @@ const Login = () => {
             {isRegister ? "Registro" : "Inicio de Sesión"}
           </Typography>
           <form onSubmit={handleSubmit}>
+            {/* Campo de Email */}
             <div>
               <input
                 style={{ padding: "0.5rem", fontSize: "2rem", width: "100%" }}
@@ -107,17 +101,28 @@ const Login = () => {
                 required
               />
             </div>
+
+            {/* Campo de Contraseña con Mostrar/Ocultar */}
             <div className="password-container">
               <input
                 style={{ padding: "0.5rem", fontSize: "2rem", width: "100%" }}
                 className="input-aut"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Ocultar 🔒" : "Mostrar 👁"}
+              </button>
             </div>
+
+            {/* Botón de Enviar */}
             <div style={{ padding: "1rem" }}>
               <button
                 style={{
@@ -132,7 +137,10 @@ const Login = () => {
               </button>
             </div>
           </form>
+
           {error && <p style={{ color: "red" }}>{error}</p>}
+
+          {/* Botón para cambiar entre Iniciar Sesión y Registrarse */}
           <p style={{ color: "Black", fontSize: "2rem" }}>
             {isRegister ? "¿Ya tienes una cuenta?" : "¿No tienes una cuenta?"}{" "}
             <button
