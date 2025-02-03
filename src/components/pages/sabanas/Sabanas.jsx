@@ -1,5 +1,5 @@
 import Grid from "@mui/material/Grid2";
-import "./Sabanas.css"; // Si quieres añadir estilos personalizados
+import "./sabanas.css"; // Si quieres añadir estilos personalizados
 import { useNavigate } from "react-router-dom";
 
 function Sabanas() {
