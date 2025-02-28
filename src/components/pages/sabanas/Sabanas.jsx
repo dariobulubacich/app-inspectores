@@ -1,4 +1,3 @@
-import Grid from "@mui/material/Grid2";
 import "./sabanas.css"; // Si quieres añadir estilos personalizados
 import { useNavigate } from "react-router-dom";
 
@@ -24,30 +23,25 @@ function Sabanas() {
   };
 
   return (
-    <Grid container={true}>
-      <Grid style={{ padding: "12rem" }} size={{ xs: 12 }}>
-        <div className="sabanas-container">
-          <h1>Sábanas</h1>
-          <p>Selecciona uno de los siguientes enlaces:</p>
-          <div className="botones-container">
-            {enlaces.map((enlace, index) => (
-              <button
-                key={index}
-                className="boton-enlace"
-                onClick={() => window.open(enlace.url, "_blank")}
-              >
-                {enlace.nombre}
-              </button>
-            ))}
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <button className="volver-button" onClick={goToAdminDashboard}>
-                Volver al Panel de Admini
-              </button>
-            </div>
-          </div>
+    <div className="sabanas-container">
+      <h1 className="title">Sábanas</h1>
+      <div className="botones-container">
+        {enlaces.map((enlace, index) => (
+          <button
+            key={index}
+            className="boton-enlace"
+            onClick={() => window.open(enlace.url, "_blank")}
+          >
+            {enlace.nombre}
+          </button>
+        ))}
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+          <button className="volver-button" onClick={goToAdminDashboard}>
+            Volver al Panel de Admini
+          </button>
         </div>
-      </Grid>
-    </Grid>
+      </div>
+    </div>
   );
 }
 

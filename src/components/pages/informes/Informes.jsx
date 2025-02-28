@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
 import { InspectorContext } from "../../pages/contexts/InspectorContext";
@@ -18,14 +18,47 @@ const Informe = () => {
   const [detalleFalta, setDetalleFalta] = useState("");
   const [lineas, setLineas] = useState([]);
   const [sectores, setSectores] = useState([]);
-  const condicion = ["Sí", "No"];
   const [auricular, setAuricular] = useState("");
   const [matafuego, setMatafuego] = useState("");
   const [celular, setCelular] = useState("");
   const [cinturon, setCinturon] = useState("");
   const [loading, setLoading] = useState(false);
+  const [modalInforme, setModalInforme] = useState(false);
+  const [modalControl, setModalControl] = useState(false);
+  const [faltas, setFaltas] = useState([]);
+  const [controles, setControles] = useState([]);
+  const [informeChecks, setInformeChecks] = useState({});
+  const [controlChecks, setControlChecks] = useState({});
 
   const { inspector } = useContext(InspectorContext); // Obtener información del inspector desde el contexto
+  const timerRef = useRef(null); // useRef para almacenar el timer sin causar re-renders
+
+  useEffect(() => {
+    const cargarDatosModal = async () => {
+      try {
+        const faltasSnapshot = await getDocs(collection(db, "faltas"));
+        const faltasData = faltasSnapshot.docs.map((doc) => doc.data().nombre);
+        setFaltas(faltasData);
+
+        const controlesSnapshot = await getDocs(collection(db, "controles"));
+        const controlesData = controlesSnapshot.docs.map(
+          (doc) => doc.data().nombre
+        );
+        setControles(controlesData);
+      } catch (error) {
+        console.error("Error al cargar faltas y controles: ", error);
+      }
+    };
+    cargarDatosModal();
+  }, []);
+
+  const toggleCheck = (category, key) => {
+    if (category === "informe") {
+      setInformeChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+    } else {
+      setControlChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
+  };
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -52,9 +85,9 @@ const Informe = () => {
     cargarDatos();
   }, []);
 
-  const buscarApellidoNombre = async () => {
+  const buscarApellidoNombre = useCallback(async () => {
     if (!legajo) {
-      alert("Por favor, ingresa un legajo válido.");
+      setApellidoNombre("");
       return;
     }
 
@@ -64,13 +97,13 @@ const Informe = () => {
         collection(db, "empleados"),
         where("legajo", "==", legajo)
       );
+
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const empleado = querySnapshot.docs[0].data();
         setApellidoNombre(`${empleado.apellido}, ${empleado.nombre}`);
       } else {
-        alert("No se encontró un empleado con el legajo ingresado.");
         setApellidoNombre("");
       }
     } catch (error) {
@@ -79,7 +112,22 @@ const Informe = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [legajo]);
+
+  useEffect(() => {
+    if (legajo) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+
+      timerRef.current = setTimeout(() => {
+        buscarApellidoNombre();
+      }, 5000);
+    } else {
+      setApellidoNombre("");
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [legajo, buscarApellidoNombre]);
 
   const guardarInforme = async () => {
     if (
@@ -94,6 +142,8 @@ const Informe = () => {
       !interseccion ||
       !detalleFalta ||
       !auricular ||
+      !informeChecks ||
+      !controlChecks ||
       !matafuego ||
       !celular ||
       !cinturon
@@ -102,8 +152,14 @@ const Informe = () => {
       return;
     }
 
-    if (!inspector) {
-      alert("No se ha cargado un inspector. Por favor, verifica.");
+    if (
+      !inspector ||
+      !inspector.legajo ||
+      !inspector.nombre ||
+      !inspector.apellido
+    ) {
+      alert("Error: No se ha cargado un inspector válido.");
+      console.log("Inspector data:", inspector);
       return;
     }
 
@@ -124,12 +180,16 @@ const Informe = () => {
         auricular,
         matafuego,
         celular,
+        informeChecks,
+        controlChecks,
         cinturon,
         inspector: {
-          numero: inspector.numero,
+          numero: inspector.legajo,
           nombre: inspector.nombre,
           apellido: inspector.apellido,
         },
+
+        inspectorNumero: inspector.legajo, // ✅ Nuevo campo fuera del objeto inspector
         timestamp: new Date().toISOString(),
       });
 
@@ -169,6 +229,17 @@ const Informe = () => {
           onChange={(e) => setFecha(e.target.value)}
           disabled={loading}
         />
+
+        <label>Inspector:</label>
+        <input
+          type="text"
+          value={
+            inspector
+              ? `${inspector.legajo}${inspector.nombre} ${inspector.apellido}`
+              : ""
+          }
+          readOnly
+        />
       </div>
 
       <div className="form-group">
@@ -179,13 +250,6 @@ const Informe = () => {
           onChange={(e) => setLegajo(e.target.value)}
           disabled={loading}
         />
-        <button
-          onClick={buscarApellidoNombre}
-          disabled={loading || !legajo}
-          className="btn"
-        >
-          {loading ? "Buscando..." : "Buscar Nombre"}
-        </button>
       </div>
 
       {apellidoNombre && (
@@ -279,63 +343,55 @@ const Informe = () => {
           rows="4"
         ></textarea>
       </div>
-      <div>
-        <label>Control:</label>
-      </div>
+      <div className="container">
+        <button onClick={() => setModalInforme(true)}>Informe</button>
+        <button onClick={() => setModalControl(true)}>Control</button>
 
-      <div className="form-group">
-        <label>Auricular:</label>
-        <select
-          value={auricular}
-          onChange={(e) => setAuricular(e.target.value)}
-        >
-          <option value="">Seleccionar</option>
-          {condicion.map((cond, index) => (
-            <option key={index} value={cond}>
-              {cond}
-            </option>
-          ))}
-        </select>
+        {modalInforme && (
+          <>
+            <div
+              className="modal-overlay"
+              onClick={() => setModalInforme(false)}
+            ></div>
+            <div className="modal">
+              <h3>Informe</h3>
+              {faltas.map((falta, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    checked={!!informeChecks[falta]}
+                    onChange={() => toggleCheck("informe", falta)}
+                  />
+                  {falta}
+                </label>
+              ))}
+              <button onClick={() => setModalInforme(false)}>Cerrar</button>
+            </div>
+          </>
+        )}
 
-        <label>Matafuego:</label>
-        <select
-          value={matafuego}
-          onChange={(e) => setMatafuego(e.target.value)}
-        >
-          <option value="">Seleccionar</option>
-          {condicion.length > 0 &&
-            condicion.map((cond, index) => (
-              <option key={index} value={cond}>
-                {cond}
-              </option>
-            ))}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Celular:</label>
-        <select value={celular} onChange={(e) => setCelular(e.target.value)}>
-          <option value="">Seleccionar</option>
-          {condicion.length > 0 &&
-            condicion.map((cond, index) => (
-              <option key={index} value={cond}>
-                {cond}
-              </option>
-            ))}
-        </select>
-
-        <label>Cinturón:</label>
-        <select value={cinturon} onChange={(e) => setCinturon(e.target.value)}>
-          <option value="" className="select-var">
-            Seleccionar
-          </option>
-          {condicion.length > 0 &&
-            condicion.map((cond, index) => (
-              <option key={index} value={cond}>
-                {cond}
-              </option>
-            ))}
-        </select>
+        {modalControl && (
+          <>
+            <div
+              className="modal-overlay"
+              onClick={() => setModalControl(false)}
+            ></div>
+            <div className="modal">
+              <h3>Control</h3>
+              {controles.map((control, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    checked={!!controlChecks[control]}
+                    onChange={() => toggleCheck("control", control)}
+                  />
+                  {control}
+                </label>
+              ))}
+              <button onClick={() => setModalControl(false)}>Cerrar</button>
+            </div>
+          </>
+        )}
       </div>
 
       <button onClick={guardarInforme} disabled={loading}>

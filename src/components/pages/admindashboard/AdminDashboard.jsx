@@ -62,8 +62,8 @@ const AdminDashboard = () => {
         {inspector && (
           <div>
             <p>
-              Inspector cargado: {inspector.nombre} {inspector.apellido} (#
-              {inspector.numero})
+              Inspector cargado: {inspector.nombre} {inspector.apellido}
+              {inspector.numero}
             </p>
           </div>
         )}
@@ -89,6 +89,16 @@ const AdminDashboard = () => {
             <li>
               <button onClick={() => navigate("/AltaInspectores")}>
                 Altas Inspectores
+              </button>
+            </li>
+            <li>
+              <button onClick={() => navigate("/AltaFrancos")}>
+                Altas Francos
+              </button>
+            </li>
+            <li>
+              <button onClick={() => navigate("/InformesInspector")}>
+                Informes Inspectores
               </button>
             </li>
           </ul>

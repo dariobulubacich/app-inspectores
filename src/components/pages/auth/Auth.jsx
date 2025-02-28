@@ -72,7 +72,7 @@ const Login = () => {
   };
 
   return (
-    <div className="div-liga">
+    <div className="div-insp">
       <p style={{ fontSize: "2.5rem" }}>App Inspectores</p>
       {isRegister ? "Registro" : "Inicio de Sesión"}
       <form onSubmit={handleSubmit}>
@@ -91,7 +91,7 @@ const Login = () => {
         {/* Campo de Contraseña con Mostrar/Ocultar */}
         <div className="password-container">
           <input
-            className="toggle-password"
+            className="input-aut"
             type={showPassword ? "text" : "password"}
             placeholder="Contraseña"
             value={password}
