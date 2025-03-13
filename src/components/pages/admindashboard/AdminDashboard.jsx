@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
@@ -11,11 +11,11 @@ const AdminDashboard = () => {
   const [legajo, setLegajo] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Buscar inspector en Firebase
-  const cargarInspector = async () => {
+  // Función para buscar inspector en Firebase
+  const cargarInspector = useCallback(async () => {
+    if (!legajo) return; // Evitar llamadas innecesarias
     try {
       setLoading(true);
-      console.log("Número ingresado:", legajo);
       const q = query(
         collection(db, "inspectores"),
         where("legajo", "==", legajo)
@@ -24,24 +24,25 @@ const AdminDashboard = () => {
 
       if (!querySnapshot.empty) {
         const inspectorData = querySnapshot.docs[0].data();
-        console.log("Inspector encontrado:", inspectorData);
         setInspector({
           legajo: inspectorData.legajo,
           nombre: inspectorData.nombre,
           apellido: inspectorData.apellido,
         });
-        alert("Inspector cargado correctamente.");
-      } else {
-        console.log("No se encontró un inspector con el número:", legajo);
-        alert("No se encontró un inspector con ese número.");
       }
-    } catch (error) {
-      console.error("Error al cargar el inspector: ", error);
-      alert("Error al cargar el inspector.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [legajo, setInspector]);
+
+  // Ejecutar cargarInspector automáticamente cuando cambia legajo
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      cargarInspector();
+    }, 3000); // Agrega un pequeño retraso para evitar llamadas excesivas
+
+    return () => clearTimeout(delayDebounce); // Limpiar el timeout si el usuario sigue escribiendo
+  }, [legajo, cargarInspector]);
 
   return (
     <div>
@@ -56,54 +57,60 @@ const AdminDashboard = () => {
           onChange={(e) => setLegajo(e.target.value)}
           disabled={loading}
         />
-        <button onClick={cargarInspector} disabled={loading || !legajo}>
-          {loading ? "Cargando..." : "Cargar Inspector"}
-        </button>
+        {loading && <p>Cargando...</p>}
         {inspector && (
           <div>
             <p>
-              Inspector cargado: {inspector.nombre} {inspector.apellido}
-              {inspector.numero}
+              Inspector cargado: {inspector.nombre} {inspector.apellido} (
+              {inspector.legajo})
             </p>
           </div>
         )}
       </div>
 
-      <div>
-        <nav>
-          <ul className="ul-nav">
-            <li>
-              <button onClick={() => navigate("/Informes")}>Informes</button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/Validaciones")}>
-                Validaciones
-              </button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/Francos")}>Francos</button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/Sabanas")}>Sabanas</button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/AltaInspectores")}>
-                Altas Inspectores
-              </button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/AltaFrancos")}>
-                Altas Francos
-              </button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/InformesInspector")}>
-                Informes Inspectores
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
+      <nav>
+        <ul className="ul-nav">
+          <li>
+            <button onClick={() => navigate("/Informes")}>Informes</button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/Validaciones")}>
+              Validaciones
+            </button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/Francos")}>Francos</button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/Sabanas")}>Sabanas</button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/AltaInspectores")}>
+              Altas Inspectores
+            </button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/AltaFrancos")}>
+              Altas Francos
+            </button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/InformesInspector")}>
+              Informes Inspectores
+            </button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/Controles")}>
+              Alta y Modificación Controles
+            </button>
+          </li>
+          <li>
+            <button onClick={() => navigate("/Faltas")}>
+              Alta y Modificación Faltas
+            </button>
+          </li>
+        </ul>
+      </nav>
     </div>
   );
 };

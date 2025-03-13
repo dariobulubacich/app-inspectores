@@ -29,6 +29,7 @@ const Informe = () => {
   const [controles, setControles] = useState([]);
   const [informeChecks, setInformeChecks] = useState({});
   const [controlChecks, setControlChecks] = useState({});
+  const [observaciones, setObservaciones] = useState("");
 
   const { inspector } = useContext(InspectorContext); // Obtener información del inspector desde el contexto
   const timerRef = useRef(null); // useRef para almacenar el timer sin causar re-renders
@@ -113,6 +114,31 @@ const Informe = () => {
       setLoading(false);
     }
   }, [legajo]);
+  useEffect(() => {
+    if (horaReal && horaTeorica) {
+      const calcularDiferencia = (horaReal, horaTeorica) => {
+        const [hReal, mReal] = horaReal.split(":").map(Number);
+        const [hTeor, mTeor] = horaTeorica.split(":").map(Number);
+        const minutosReal = hReal * 60 + mReal;
+        const minutosTeorico = hTeor * 60 + mTeor;
+        const diferencia = minutosTeorico - minutosReal;
+
+        return diferencia;
+      };
+
+      const diferencia = calcularDiferencia(horaReal, horaTeorica);
+
+      if (diferencia > 0) {
+        setDetalleFalta(`Circula con ${diferencia} minutos de adelanto.`);
+      } else if (diferencia < 0) {
+        setDetalleFalta(
+          `Circula con ${Math.abs(diferencia)} minutos de atraso.`
+        );
+      } else {
+        setDetalleFalta("Circula en horario.");
+      }
+    }
+  }, [horaReal, horaTeorica]);
 
   useEffect(() => {
     if (legajo) {
@@ -177,6 +203,7 @@ const Informe = () => {
         interno,
         interseccion,
         detalleFalta,
+        observaciones,
         auricular,
         matafuego,
         celular,
@@ -205,6 +232,7 @@ const Informe = () => {
       setInterno("");
       setInterseccion("");
       setDetalleFalta("");
+      setObservaciones("");
       setAuricular("");
       setMatafuego("");
       setCelular("");
@@ -335,14 +363,21 @@ const Informe = () => {
         />
       </div>
       <div>
-        <textarea
-          value={detalleFalta}
-          placeholder="Detalle de la falta"
-          onChange={(e) => setDetalleFalta(e.target.value)}
-          disabled={loading}
-          rows="4"
-        ></textarea>
+        <textarea value={detalleFalta} readOnly rows="4"></textarea>
       </div>
+      <div className="form-group">
+        <label htmlFor="observaciones" className="form-label">
+          Observaciones
+        </label>
+        <input
+          id="observaciones"
+          type="text"
+          className="form-input"
+          value={observaciones}
+          onChange={(e) => setObservaciones(e.target.value)}
+        />
+      </div>
+
       <div className="container">
         <button onClick={() => setModalInforme(true)}>Informe</button>
         <button onClick={() => setModalControl(true)}>Control</button>
