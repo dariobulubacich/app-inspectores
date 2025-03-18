@@ -9,7 +9,6 @@ const Informe = () => {
   const [legajo, setLegajo] = useState("");
   const [apellidoNombre, setApellidoNombre] = useState("");
   const [linea, setLinea] = useState("");
-  const [sector, setSector] = useState("");
   const [horaReal, setHoraReal] = useState("");
   const [horaTeorica, setHoraTeorica] = useState("");
   const [servicio, setServicio] = useState("");
@@ -17,19 +16,21 @@ const Informe = () => {
   const [interseccion, setInterseccion] = useState("");
   const [detalleFalta, setDetalleFalta] = useState("");
   const [lineas, setLineas] = useState([]);
-  const [sectores, setSectores] = useState([]);
+  const [turnos, setTurnos] = useState([]);
   const [auricular, setAuricular] = useState("");
   const [matafuego, setMatafuego] = useState("");
   const [celular, setCelular] = useState("");
   const [cinturon, setCinturon] = useState("");
   const [loading, setLoading] = useState(false);
-  const [modalInforme, setModalInforme] = useState(false);
   const [modalControl, setModalControl] = useState(false);
-  const [faltas, setFaltas] = useState([]);
+
   const [controles, setControles] = useState([]);
   const [informeChecks, setInformeChecks] = useState({});
   const [controlChecks, setControlChecks] = useState({});
   const [observaciones, setObservaciones] = useState("");
+  const [turnoSeleccionado, setTurnoSeleccionado] = useState("");
+
+  const [sectorSeleccionado, setSectorSeleccionado] = useState("");
 
   const { inspector } = useContext(InspectorContext); // Obtener información del inspector desde el contexto
   const timerRef = useRef(null); // useRef para almacenar el timer sin causar re-renders
@@ -37,10 +38,6 @@ const Informe = () => {
   useEffect(() => {
     const cargarDatosModal = async () => {
       try {
-        const faltasSnapshot = await getDocs(collection(db, "faltas"));
-        const faltasData = faltasSnapshot.docs.map((doc) => doc.data().nombre);
-        setFaltas(faltasData);
-
         const controlesSnapshot = await getDocs(collection(db, "controles"));
         const controlesData = controlesSnapshot.docs.map(
           (doc) => doc.data().nombre
@@ -70,11 +67,9 @@ const Informe = () => {
         const lineasData = lineasSnapshot.docs.map((doc) => doc.data().nombre);
         setLineas(lineasData);
 
-        const sectoresSnapshot = await getDocs(collection(db, "sectores"));
-        const sectoresData = sectoresSnapshot.docs.map(
-          (doc) => doc.data().nombre
-        );
-        setSectores(sectoresData);
+        const turnosSnapshot = await getDocs(collection(db, "turnos"));
+        const turnosData = turnosSnapshot.docs.map((doc) => doc.data().nombre);
+        setTurnos(turnosData);
       } catch (error) {
         console.error("Error al cargar líneas y sectores: ", error);
         alert("Error al cargar líneas y sectores.");
@@ -85,6 +80,41 @@ const Informe = () => {
 
     cargarDatos();
   }, []);
+
+  const [sectores, setSectores] = useState([]);
+
+  useEffect(() => {
+    const cargarSectores = async () => {
+      if (!linea) return setSectores([]);
+
+      try {
+        console.log("Buscando sectores para línea:", linea);
+        const q = query(collection(db, "lineas"), where("nombre", "==", linea));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const data = querySnapshot.docs[0].data();
+          console.log("Datos obtenidos:", data);
+
+          // Si sectores es un string, lo convertimos en array separándolo por comas
+          const sectoresArray =
+            typeof data.sectores === "string"
+              ? data.sectores.split(",").map((s) => s.trim()) // Dividimos por coma y eliminamos espacios
+              : data.sectores || [];
+
+          setSectores(sectoresArray);
+        } else {
+          console.log("No se encontraron sectores.");
+          setSectores([]);
+        }
+      } catch (error) {
+        console.error("Error al cargar sectores:", error);
+        alert("Ocurrió un error al cargar los sectores.");
+      }
+    };
+
+    cargarSectores();
+  }, [linea]);
 
   const buscarApellidoNombre = useCallback(async () => {
     if (!legajo) {
@@ -122,12 +152,10 @@ const Informe = () => {
         const minutosReal = hReal * 60 + mReal;
         const minutosTeorico = hTeor * 60 + mTeor;
         const diferencia = minutosTeorico - minutosReal;
-
         return diferencia;
       };
 
       const diferencia = calcularDiferencia(horaReal, horaTeorica);
-
       if (diferencia > 0) {
         setDetalleFalta(`Circula con ${diferencia} minutos de adelanto.`);
       } else if (diferencia < 0) {
@@ -160,7 +188,8 @@ const Informe = () => {
       !fecha ||
       !legajo ||
       !linea ||
-      !sector ||
+      !sectores ||
+      !turnos ||
       !horaReal ||
       !horaTeorica ||
       !servicio ||
@@ -196,7 +225,8 @@ const Informe = () => {
         legajo,
         apellidoNombre,
         linea,
-        sector,
+        sectores,
+        turnos,
         horaReal,
         horaTeorica,
         servicio,
@@ -225,7 +255,7 @@ const Informe = () => {
       setLegajo("");
       setApellidoNombre("");
       setLinea("");
-      setSector("");
+      setTurnos("");
       setHoraReal("");
       setHoraTeorica("");
       setServicio("");
@@ -250,15 +280,14 @@ const Informe = () => {
       <h1 className="title">Informe</h1>
 
       <div className="form-group">
-        <label>Fecha:</label>
+        <label className="label-informes">Fecha:</label>
         <input
           type="date"
           value={fecha}
           onChange={(e) => setFecha(e.target.value)}
           disabled={loading}
         />
-
-        <label>Inspector:</label>
+        <label className="label-informes">Inspector:</label>
         <input
           type="text"
           value={
@@ -271,24 +300,24 @@ const Informe = () => {
       </div>
 
       <div className="form-group">
-        <label>Legajo:</label>
+        <label className="label-informes">Legajo:</label>
         <input
+          className="imput-var"
           type="text"
           value={legajo}
           onChange={(e) => setLegajo(e.target.value)}
           disabled={loading}
         />
       </div>
-
       {apellidoNombre && (
         <div className="form-group">
-          <label>Apellido y Nombre:</label>
+          <label className="label-informes">Apellido y Nombre:</label>
           <input type="text" value={apellidoNombre} readOnly />
         </div>
       )}
 
       <div className="form-group">
-        <label>Línea:</label>
+        <label className="label-informes">Línea:</label>
         <select
           value={linea}
           onChange={(e) => setLinea(e.target.value)}
@@ -302,32 +331,52 @@ const Informe = () => {
           ))}
         </select>
 
-        <label>Sector:</label>
+        <label className="label-informes">Sectores:</label>
         <select
-          value={sector}
-          onChange={(e) => setSector(e.target.value)}
+          className="select-informe"
+          value={sectorSeleccionado}
+          onChange={(e) => setSectorSeleccionado(e.target.value)}
+          disabled={loading || sectores.length === 0}
+        >
+          <option value="">Sector</option>
+          {Array.isArray(sectores) && sectores.length > 0 ? (
+            sectores.map((sector, index) => (
+              <option key={index} value={sector}>
+                {sector}
+              </option>
+            ))
+          ) : (
+            <option disabled>No hay sectores disponibles</option>
+          )}
+        </select>
+      </div>
+      <div className="form-group">
+        <label className="label-informes">Turno:</label>
+        <select
+          value={turnoSeleccionado}
+          onChange={(e) => setTurnoSeleccionado(e.target.value)}
           disabled={loading}
         >
-          <option value="">Seleccionar Sector</option>
-          {sectores.map((sector, index) => (
-            <option key={index} value={sector}>
-              {sector}
+          <option value="">Turno</option>
+          {turnos.map((turno, index) => (
+            <option key={index} value={turno}>
+              {turno}
             </option>
           ))}
         </select>
-      </div>
 
-      <div className="form-group">
-        <label>Servicio:</label>
+        <label className="label-informes">Servicio:</label>
         <input
+          className="imput-var"
           type="text"
           value={servicio}
           onChange={(e) => setServicio(e.target.value)}
           disabled={loading}
         />
 
-        <label>Interno:</label>
+        <label className="label-informes">Interno:</label>
         <input
+          className="imput-var"
           type="text"
           value={interno}
           onChange={(e) => setInterno(e.target.value)}
@@ -336,7 +385,7 @@ const Informe = () => {
       </div>
 
       <div>
-        <label>Intersección Alternativa:</label>
+        <label className="label-informes-int">Intersección Alternativa:</label>
         <input
           type="text"
           value={interseccion}
@@ -346,7 +395,7 @@ const Informe = () => {
       </div>
 
       <div className="form-group">
-        <label>Hora Real de Paso:</label>
+        <label className="label-informes">Hora Real de Paso:</label>
         <input
           type="time"
           value={horaReal}
@@ -354,7 +403,7 @@ const Informe = () => {
           disabled={loading}
         />
 
-        <label>Hora Teórica de Paso:</label>
+        <label className="label-informes">Hora Teórica de Paso:</label>
         <input
           type="time"
           value={horaTeorica}
@@ -363,10 +412,14 @@ const Informe = () => {
         />
       </div>
       <div>
-        <textarea value={detalleFalta} readOnly rows="4"></textarea>
+        <textarea
+          value={detalleFalta}
+          readOnly
+          className="textarea-aut"
+        ></textarea>
       </div>
       <div className="form-group">
-        <label htmlFor="observaciones" className="form-label">
+        <label htmlFor="observaciones" className="label-informes">
           Observaciones
         </label>
         <input
@@ -379,32 +432,7 @@ const Informe = () => {
       </div>
 
       <div className="container">
-        <button onClick={() => setModalInforme(true)}>Informe</button>
         <button onClick={() => setModalControl(true)}>Control</button>
-
-        {modalInforme && (
-          <>
-            <div
-              className="modal-overlay"
-              onClick={() => setModalInforme(false)}
-            ></div>
-            <div className="modal">
-              <h3>Informe</h3>
-              {faltas.map((falta, index) => (
-                <label key={index}>
-                  <input
-                    type="checkbox"
-                    checked={!!informeChecks[falta]}
-                    onChange={() => toggleCheck("informe", falta)}
-                  />
-                  {falta}
-                </label>
-              ))}
-              <button onClick={() => setModalInforme(false)}>Cerrar</button>
-            </div>
-          </>
-        )}
-
         {modalControl && (
           <>
             <div
@@ -428,10 +456,15 @@ const Informe = () => {
           </>
         )}
       </div>
-
-      <button onClick={guardarInforme} disabled={loading}>
-        {loading ? "Guardando..." : "Guardar Informe"}
-      </button>
+      <div className="guardar-informe">
+        <button
+          onClick={guardarInforme}
+          disabled={loading}
+          className="guardar-informe"
+        >
+          {loading ? "Guardando..." : "Guardar Informe"}
+        </button>
+      </div>
     </div>
   );
 };

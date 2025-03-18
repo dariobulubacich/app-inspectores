@@ -1,5 +1,5 @@
 .container {
-  max-width: 600px;
+  max-width: 420px;
   margin: 20px auto;
   padding: 20px;
   background: none;
@@ -21,8 +21,9 @@
 
 .form-group {
   display: flex;
-  gap: 15px;
+  gap: 5px;
   margin-bottom: 15px;
+  align-items: center;
 }
 
 .form-group label {
@@ -30,17 +31,48 @@
   margin-bottom: 5px;
 }
 
+.select-informe {
+  width: 180px;
+}
+
+.imput-var {
+  width: 60px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 input,
 select,
 textarea {
   padding: 5px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 13px;
 }
 
-textarea {
+.label-informes {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+}
+
+.label-informes-int {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+}
+
+.textarea-aut {
   resize: none;
+  width: 300px;
+  height: auto;
 }
 
 .btn {
@@ -111,4 +143,9 @@ textarea {
 
 .modal button:hover {
   background-color: #0056b3;
+}
+
+.guardar-informe {
+  align-items: center;
+  text-align: center;
 }
