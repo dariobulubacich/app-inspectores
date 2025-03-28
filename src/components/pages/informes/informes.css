@@ -1,6 +1,6 @@
 .container {
   max-width: 410px;
-  margin: 20px auto;
+  margin: 30px auto;
   padding: 20px;
   background: #c2cbd4;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
@@ -52,13 +52,20 @@
   box-sizing: border-box;
 }
 
+.input-insp {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+}
+
 input,
 select,
 textarea {
-  padding: 5px;
+  padding: 4px;
   border: 1px solid #ccc;
   border-radius: 2px;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .label-informes {
@@ -103,6 +110,12 @@ textarea {
 .btn-primary:hover {
   background: #0056b3;
 }
+
+.container-guardar {
+  display: flex;
+  gap: 10px;
+}
+
 .modal {
   position: fixed;
   top: 35%;

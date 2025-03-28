@@ -276,7 +276,12 @@ const Informe = () => {
           disabled={loading}
         />
         <label className="label-informes">Inspector:</label>
-        <input type="text" value={inspectorData} readOnly />
+        <input
+          className="input-insp"
+          type="text"
+          value={inspectorData}
+          readOnly
+        />
       </div>
 
       <div className="form-group">
@@ -412,7 +417,7 @@ const Informe = () => {
         />
       </div>
 
-      <div className="container">
+      <div className="container-guardar">
         <button onClick={() => setModalControl(true)}>
           Guardar y Enviar Informe
         </button>
@@ -439,8 +444,6 @@ const Informe = () => {
             </div>
           </>
         )}
-      </div>
-      <div className="guardar-informe">
         <button
           onClick={guardarInforme}
           disabled={loading}
