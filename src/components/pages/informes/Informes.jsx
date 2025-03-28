@@ -2,6 +2,7 @@ import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
 import { InspectorContext } from "../../pages/contexts/InspectorContext";
+import { useMemo } from "react";
 import "./informes.css";
 
 const Informe = () => {
@@ -17,23 +18,22 @@ const Informe = () => {
   const [detalleFalta, setDetalleFalta] = useState("");
   const [lineas, setLineas] = useState([]);
   const [turnos, setTurnos] = useState([]);
-  const [auricular, setAuricular] = useState("");
-  const [matafuego, setMatafuego] = useState("");
-  const [celular, setCelular] = useState("");
-  const [cinturon, setCinturon] = useState("");
   const [loading, setLoading] = useState(false);
   const [modalControl, setModalControl] = useState(false);
-
   const [controles, setControles] = useState([]);
   const [informeChecks, setInformeChecks] = useState({});
   const [controlChecks, setControlChecks] = useState({});
   const [observaciones, setObservaciones] = useState("");
   const [turnoSeleccionado, setTurnoSeleccionado] = useState("");
-
   const [sectorSeleccionado, setSectorSeleccionado] = useState("");
-
   const { inspector } = useContext(InspectorContext); // Obtener información del inspector desde el contexto
   const timerRef = useRef(null); // useRef para almacenar el timer sin causar re-renders
+
+  const inspectorData = useMemo(() => {
+    return inspector
+      ? `${inspector.legajo} ${inspector.nombre} ${inspector.apellido}`
+      : "";
+  }, [inspector]);
 
   useEffect(() => {
     const cargarDatosModal = async () => {
@@ -88,13 +88,11 @@ const Informe = () => {
       if (!linea) return setSectores([]);
 
       try {
-        console.log("Buscando sectores para línea:", linea);
         const q = query(collection(db, "lineas"), where("nombre", "==", linea));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
           const data = querySnapshot.docs[0].data();
-          console.log("Datos obtenidos:", data);
 
           // Si sectores es un string, lo convertimos en array separándolo por comas
           const sectoresArray =
@@ -104,7 +102,6 @@ const Informe = () => {
 
           setSectores(sectoresArray);
         } else {
-          console.log("No se encontraron sectores.");
           setSectores([]);
         }
       } catch (error) {
@@ -184,49 +181,44 @@ const Informe = () => {
   }, [legajo, buscarApellidoNombre]);
 
   const guardarInforme = async () => {
-    if (
-      !fecha ||
-      !legajo ||
-      !linea ||
-      !sectores ||
-      !turnos ||
-      !horaReal ||
-      !horaTeorica ||
-      !servicio ||
-      !interno ||
-      !interseccion ||
-      !detalleFalta ||
-      !auricular ||
-      !informeChecks ||
-      !controlChecks ||
-      !matafuego ||
-      !celular ||
-      !cinturon
-    ) {
-      alert("Por favor, completa todos los campos.");
-      return;
-    }
-
-    if (
-      !inspector ||
-      !inspector.legajo ||
-      !inspector.nombre ||
-      !inspector.apellido
-    ) {
-      alert("Error: No se ha cargado un inspector válido.");
-      console.log("Inspector data:", inspector);
-      return;
-    }
-
     try {
+      if (
+        !fecha ||
+        !legajo ||
+        !linea ||
+        !turnoSeleccionado ||
+        !sectorSeleccionado ||
+        !horaReal ||
+        !horaTeorica ||
+        !servicio ||
+        !interno ||
+        !interseccion ||
+        !detalleFalta
+      ) {
+        alert("Por favor, completa todos los campos.");
+        return;
+      }
+
+      if (
+        !inspector ||
+        !inspector.legajo ||
+        !inspector.nombre ||
+        !inspector.apellido
+      ) {
+        alert("Error: No se ha cargado un inspector válido.");
+        console.log("Inspector data:", inspector);
+        return;
+      }
+
       setLoading(true);
+
       await addDoc(collection(db, "informes"), {
         fecha,
         legajo,
         apellidoNombre,
         linea,
-        sectores,
-        turnos,
+        sector: sectorSeleccionado,
+        turno: turnoSeleccionado,
         horaReal,
         horaTeorica,
         servicio,
@@ -234,28 +226,26 @@ const Informe = () => {
         interseccion,
         detalleFalta,
         observaciones,
-        auricular,
-        matafuego,
-        celular,
         informeChecks,
         controlChecks,
-        cinturon,
         inspector: {
           numero: inspector.legajo,
           nombre: inspector.nombre,
           apellido: inspector.apellido,
         },
-
-        inspectorNumero: inspector.legajo, // ✅ Nuevo campo fuera del objeto inspector
+        inspectorNumero: inspector.legajo,
         timestamp: new Date().toISOString(),
       });
 
       alert("Informe guardado correctamente.");
+
+      // 🔹 Restablecer valores correctamente
       setFecha("");
       setLegajo("");
       setApellidoNombre("");
       setLinea("");
-      setTurnos("");
+      setSectorSeleccionado("");
+      setTurnoSeleccionado("");
       setHoraReal("");
       setHoraTeorica("");
       setServicio("");
@@ -263,12 +253,10 @@ const Informe = () => {
       setInterseccion("");
       setDetalleFalta("");
       setObservaciones("");
-      setAuricular("");
-      setMatafuego("");
-      setCelular("");
-      setCinturon("");
+      setInformeChecks({});
+      setControlChecks({});
     } catch (error) {
-      console.error("Error al guardar el informe: ", error);
+      console.error("Error al guardar el informe:", error);
       alert("Ocurrió un error al guardar el informe.");
     } finally {
       setLoading(false);
@@ -288,15 +276,7 @@ const Informe = () => {
           disabled={loading}
         />
         <label className="label-informes">Inspector:</label>
-        <input
-          type="text"
-          value={
-            inspector
-              ? `${inspector.legajo}${inspector.nombre} ${inspector.apellido}`
-              : ""
-          }
-          readOnly
-        />
+        <input type="text" value={inspectorData} readOnly />
       </div>
 
       <div className="form-group">
@@ -308,13 +288,14 @@ const Informe = () => {
           onChange={(e) => setLegajo(e.target.value)}
           disabled={loading}
         />
+
+        {apellidoNombre && (
+          <>
+            <label className="label-informes">Apellido y Nombre:</label>
+            <input type="text" value={apellidoNombre} readOnly />
+          </>
+        )}
       </div>
-      {apellidoNombre && (
-        <div className="form-group">
-          <label className="label-informes">Apellido y Nombre:</label>
-          <input type="text" value={apellidoNombre} readOnly />
-        </div>
-      )}
 
       <div className="form-group">
         <label className="label-informes">Línea:</label>
@@ -323,7 +304,7 @@ const Informe = () => {
           onChange={(e) => setLinea(e.target.value)}
           disabled={loading}
         >
-          <option value="">Seleccionar Línea</option>
+          <option value=""></option>
           {lineas.map((linea, index) => (
             <option key={index} value={linea}>
               {linea}
@@ -384,7 +365,7 @@ const Informe = () => {
         />
       </div>
 
-      <div>
+      <div className="form-group">
         <label className="label-informes-int">Intersección Alternativa:</label>
         <input
           type="text"
@@ -432,6 +413,9 @@ const Informe = () => {
       </div>
 
       <div className="container">
+        <button onClick={() => setModalControl(true)}>
+          Guardar y Enviar Informe
+        </button>
         <button onClick={() => setModalControl(true)}>Control</button>
         {modalControl && (
           <>
